@@ -48,16 +48,28 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Other apps...
     "phonenumber_field",
+    'rest_framework',
+    'corsheaders',
     # My apps...
     'users',
     'restaurants',
 ]
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+        'rest_framework.permissions.AllowAny',
+    ]
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     # Add LocaleMiddleware (for localization),
     # after SessionMiddleware and before CommonMiddleware.
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
