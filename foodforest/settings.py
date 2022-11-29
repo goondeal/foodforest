@@ -38,6 +38,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # To use with 'admin' list before it.
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -48,11 +50,15 @@ INSTALLED_APPS = [
     "phonenumber_field",
     # My apps...
     'users',
+    'restaurants',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # Add LocaleMiddleware (for localization),
+    # after SessionMiddleware and before CommonMiddleware.
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -119,6 +125,13 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
+LANGUAGES = (
+    ('en', 'English'),
+    ('ar', 'عربى'),
+)
+
+MODELTRANSLATION_LANGUAGES = ('en', 'ar')
+
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -127,6 +140,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+LOCALE_PATHS = {
+    BASE_DIR / 'locale'
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
