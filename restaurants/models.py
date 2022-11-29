@@ -69,7 +69,7 @@ class Restaurant(models.Model):
         max_digits=9, decimal_places=6, blank=True, null=True)
 
     status = models.ForeignKey(
-        RestaurantStatus, on_delete=models.PROTECT,)
+        RestaurantStatus, on_delete=models.PROTECT, default=3)
 
     date_joined = models.DateTimeField(auto_now_add=True, editable=False)
 
