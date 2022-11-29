@@ -159,8 +159,7 @@ class MenuItem(models.Model):
         on_delete=models.CASCADE,
         related_name='items',
     )
-    features = models.ManyToManyField(
-        MenuItemFeature, null=True, blank=True)
+    features = models.ManyToManyField(MenuItemFeature)
 
     rating = models.FloatField(editable=False, default=0.0)
     num_of_reviewers = models.IntegerField(editable=False, default=0)
