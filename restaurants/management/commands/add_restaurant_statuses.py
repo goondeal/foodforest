@@ -10,14 +10,17 @@ class Command(BaseCommand):
             {
                 'title': 'open',
                 'title_ar': 'مفتوح',
+                'color': 'green',
             },
             {
                 'title': 'stand by',
                 'title_ar': 'يستعد',
+                'color': 'yellow',
             },
             {
                 'title': 'closed',
-                'title_ar': 'مغلق'
+                'title_ar': 'مغلق',
+                'color': 'red',
             },
         ]
 
