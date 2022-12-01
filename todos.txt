@@ -1,0 +1,14 @@
+[Thu 1 Dec 2022]
+- Make login with email -instead of phone- and password
+- Develop Authentication part:
+    - signup backend functionality
+    - login form in front end
+    - login backend functionality
+    - logout backend functionality
+    - reflect user state in frontend
+- permitions
+- enable users to complete orders
+- complete users app to relate restaurants with owners
+- restaurant ratings and items ratings
+- channels to track order state
+- internationalization (translation ar, en)
