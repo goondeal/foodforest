@@ -8,21 +8,29 @@ class CustomUserManager(BaseUserManager):
     for authentication instead of usernames.
     """
 
-    def create_user(self, phone, password, **extra_fields):
-        if not phone:
-            raise ValueError(_('Users must have a phone number'))
+    def create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError(_('Users must have an email address'))
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user
+        # TODO: Use in phone validation function then delete
+        # if not phone:
+        #     raise ValueError(_('Users must have a phone number'))
         
-        phoneNumber = PhoneNumber.from_string(phone)
-        if phoneNumber.is_valid():
-            user = self.model(phone=phone, **extra_fields)
-            user.set_password(password)
-            user.save()
-            return user
-        else:
-            raise ValueError(_('Please enter a valid phone number'))
+        # phoneNumber = PhoneNumber.from_string(phone)
+        # if phoneNumber.is_valid():
+        #     user = self.model(phone=phone, **extra_fields)
+        #     user.set_password(password)
+        #     user.save()
+        #     return user
+        # else:
+        #     raise ValueError(_('Please enter a valid phone number'))
 
 
-    def create_superuser(self, phone, password, **extra_fields):
+    def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
@@ -31,5 +39,5 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_('Superuser must have is_staff=True.'))
         if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('Superuser must have is_superuser=True.'))
-        return self.create_user(phone, password, **extra_fields)
+        return self.create_user(email, password, **extra_fields)
         
