@@ -52,7 +52,9 @@ INSTALLED_APPS = [
     # Other apps...
     "phonenumber_field",
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
+    'djoser',
     # My apps...
     'users',
     'restaurants',
@@ -64,7 +66,10 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
         'rest_framework.permissions.AllowAny',
-    ]
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
 }
 
 MIDDLEWARE = [
