@@ -1,13 +1,25 @@
 [Thu 1 Dec 2022]
-- Make login with email -instead of phone- and password
+- Make login with email -instead of phone- and password [Done]
 - Develop Authentication part:
-    - signup backend functionality
-    - login form in front end
-    - login backend functionality
-    - logout backend functionality
-    - reflect user state in frontend
-- permitions
+    - signup backend functionality [Done]
+    - login form in front end [Done]
+    - login backend functionality [Done]
+    - logout backend functionality [Done]
+    - reflect user state in frontend [Done]
+
+[Sat 3 Dec 2022]
 - enable users to complete orders
+    - create orders app in django
+    - create orders models
+    - create orders views
+        - create new order
+        - get user orders
+    - create and test endpoints for views
+    - Reflect changes in frontend
+        - user orders page
+        - order card
+
+- permitions
 - complete users app to relate restaurants with owners
 - restaurant ratings and items ratings
 - channels to track order state
