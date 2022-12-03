@@ -8,10 +8,12 @@ from .managers import CustomUserManager
 
 class CustomUser(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)
-    phone = PhoneNumberField(null=False, blank=False, unique=True)
+    phone = PhoneNumberField(null=True, blank=True, unique=True)
 
+    username_validator = None
+    username = None
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username',)
+    REQUIRED_FIELDS = ('first_name', 'last_name')
 
     objects = CustomUserManager()
 
