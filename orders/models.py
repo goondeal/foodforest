@@ -27,10 +27,10 @@ class Order(models.Model):
     note = models.TextField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     phone = PhoneNumberField(null=True, blank=True, db_index=True)
+    status = models.ForeignKey(OrderStatus, on_delete=models.PROTECT)
     # If orderType is Delivery:
     captin = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='captin', on_delete=models.PROTECT, null=True, blank=True)
     
-
     prep_duration_sec = models.IntegerField(default=0, editable=False)
     delivery_duration_sec = models.IntegerField(default=0, editable=False)
     
