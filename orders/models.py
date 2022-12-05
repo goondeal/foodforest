@@ -24,7 +24,7 @@ class Order(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.PROTECT)
     type = models.ForeignKey(OrderType, related_name='type', on_delete=models.PROTECT)
     price = models.DecimalField(max_digits=9, decimal_places=2)
-
+    note = models.TextField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     phone = PhoneNumberField(null=True, blank=True, db_index=True)
     # If orderType is Delivery:
