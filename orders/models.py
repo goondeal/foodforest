@@ -25,7 +25,7 @@ class Order(models.Model):
     type = models.ForeignKey(OrderType, related_name='type', on_delete=models.PROTECT)
     price = models.DecimalField(max_digits=9, decimal_places=2)
 
-    date_time = models.DateTimeField(auto_now_add=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
     phone = PhoneNumberField(null=True, blank=True, db_index=True)
     # If orderType is Delivery:
     captin = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='captin', on_delete=models.PROTECT, null=True, blank=True)
