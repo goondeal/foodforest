@@ -13,6 +13,7 @@ class OrderType(models.Model):
 
 class OrderStatus(models.Model):
     title = models.CharField(max_length=63)
+    color = models.CharField(max_length=31)
 
     def __str__(self):
         return self.title
