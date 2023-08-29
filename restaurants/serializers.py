@@ -8,7 +8,6 @@ class RestaurantStatusSerializer(serializers.ModelSerializer):
         fields = ('title', 'color', 'is_open')
 
 
-
 class MenuItemFeatureCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItemFeatureCategory
@@ -46,16 +45,15 @@ class MenuItemSerializer(serializers.ModelSerializer):
         return response
 
 
-
 class MenuCategorySerializer(serializers.ModelSerializer):
     items = MenuItemSerializer(many=True)
+
     class Meta:
         model = MenuCategory
-        fields = ('title', 'items')
+        fields = ('id', 'title', 'items')
 
 
-
-class RestaurantShallowSerializer(serializers.ModelSerializer):
+class RestaurantSerializer(serializers.ModelSerializer):
     status = RestaurantStatusSerializer()
 
     class Meta:
@@ -63,10 +61,9 @@ class RestaurantShallowSerializer(serializers.ModelSerializer):
         fields = ('slug', 'name', 'slogan', 'rating',
                   'num_of_reviewers', 'logo', 'address', 'status')
 
-
-class RestaurantFullSerializer(serializers.ModelSerializer):
-    status = RestaurantStatusSerializer()
-    class Meta:
-        model = Restaurant
-        fields = '__all__'
-
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        if self.context.get('view').action == 'retrieve':
+            result['menu'] = MenuCategorySerializer(
+                instance.menu, many=True).data
+        return result

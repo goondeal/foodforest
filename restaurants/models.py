@@ -83,6 +83,10 @@ class Restaurant(models.Model):
     def abs_url(self):
         return f'/restaurants/{self.slug}/'
 
+    @property
+    def menu(self):
+        return self.menu_categories.all()    
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name, allow_unicode=True)
