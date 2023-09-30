@@ -18,7 +18,13 @@ class Command(BaseCommand):
         with open(file=fpath, mode='r', encoding='utf-8') as f:
             data = json.loads(f.read())
         
-        country = Country.objects.create(name=data['name'], name_ar=data['name_ar'])
+        country = Country.objects.create(
+            name=data['name'],
+            name_ar=data['name_ar'],
+            code=data['code'],
+            currency=data['currency'],
+            currency_ar=data['currency_ar'],
+        )
         states = data["states"]
         for i in range(len(states)):
             s = states[i]

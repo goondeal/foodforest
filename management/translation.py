@@ -3,7 +3,7 @@ from .models import Country, State, City
 
 
 class CountryTranslationOptions(TranslationOptions):
-    fields = ('name',)
+    fields = ('name', 'currency')
 
 class StateTranslationOptions(TranslationOptions):
     fields = ('name',)

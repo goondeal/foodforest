@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'restaurants',
     'orders',
     'settlements',
+    'management',
 ]
 
 REST_FRAMEWORK = {
