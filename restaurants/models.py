@@ -1,42 +1,47 @@
 from django.db import models
+from django.conf import settings
 from django.utils.text import slugify
+from management.models import City
 
 
 class RestaurantStatus(models.Model):
-    title = models.CharField(max_length=63)
+    title = models.CharField(max_length=255)
     color = models.CharField(max_length=7)
 
     class Meta:
         verbose_name_plural = 'Restaurant statuses'
 
     def __str__(self):
-        return self.title
+        return f'{self.title} - {self.color}'
 
     @property
     def is_open(self):
-        return self.id == 1
+        return self.title.lower() == 'open'
 
 
 class FoodCategory(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(
-        unique=True, allow_unicode=True, blank=True, editable=False)
+        unique=True,
+        allow_unicode=True,
+        blank=True,
+        editable=False
+    )
     img = models.ImageField(
-        upload_to='food-categories-images/', blank=True, null=True,)
+        upload_to='categories-images/',
+        blank=True,
+        null=True
+    )
     creation_time = models.DateTimeField(editable=False, auto_now_add=True)
     ordering = models.SmallIntegerField(default=0)
 
     class Meta:
         verbose_name_plural = 'Food categories'
-        ordering = ('ordering', 'name',)
+        ordering = ('ordering', 'name')
 
     @property
     def abs_url(self):
         return f'/{self.slug}/'
-
-    @property
-    def img_url(self):
-        return self.img.url if self.img else ''
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -48,36 +53,53 @@ class FoodCategory(models.Model):
 
 
 class Restaurant(models.Model):
-    name = models.CharField(max_length=63)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+                              on_delete=models.PROTECT)
+    city = models.ForeignKey(City, on_delete=models.PROTECT)                          
+    name = models.CharField(max_length=255)
     slogan = models.CharField(max_length=127, blank=True, null=True)
     description = models.TextField(max_length=1023, blank=True, null=True)
     slug = models.SlugField(unique=True, allow_unicode=True, editable=False)
 
     rating = models.FloatField(editable=False, default=0.0)
-    num_of_reviewers = models.IntegerField(editable=False, default=0)
+    num_of_reviewers = models.PositiveIntegerField(editable=False, default=0)
 
-    category = models.ManyToManyField(FoodCategory)
+    categories = models.ManyToManyField(FoodCategory)
     logo = models.ImageField(
-        upload_to='restaurants-images/', blank=True, null=True)
+        upload_to='restaurants-images/',
+        blank=True,
+        null=True
+    )
     cover = models.ImageField(
-        upload_to='restaurants-images/', blank=True, null=True)
+        upload_to='restaurants-images/',
+        blank=True,
+        null=True
+    )
 
     address = models.CharField(max_length=255)
-    _long = models.DecimalField(
+    _longitude = models.DecimalField(
         max_digits=9, decimal_places=6, blank=True, null=True)
-    _lat = models.DecimalField(
+    _latitude = models.DecimalField(
         max_digits=9, decimal_places=6, blank=True, null=True)
 
     status = models.ForeignKey(
-        RestaurantStatus, on_delete=models.PROTECT, default=3)
+        RestaurantStatus, on_delete=models.PROTECT, null=True)
 
-    date_joined = models.DateTimeField(auto_now_add=True, editable=False)
+    active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['owner'], name='owner_index'),
+            models.Index(fields=['city'], name='city_index'),
+        ]
 
     @property
     def location(self):
-        if self._long == None or self._lat == None:
-            return ''
-        return f'{self._long},{self._lat}'
+        if self._longitude and self._latitude:
+            return f'{self._longitude},{self._latitude}'
+        return ''
 
     @property
     def abs_url(self):
@@ -85,7 +107,7 @@ class Restaurant(models.Model):
 
     @property
     def menu(self):
-        return self.menu_categories.all()    
+        return self.menu_categories.all()
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -97,11 +119,10 @@ class Restaurant(models.Model):
 
 
 class MenuCategory(models.Model):
-    title = models.CharField(max_length=63)
+    title = models.CharField(max_length=255)
     restaurant = models.ForeignKey(
         Restaurant,
         on_delete=models.CASCADE,
-        db_index=True,
         related_name='menu_categories',
     )
     ordering = models.SmallIntegerField(default=0)
@@ -110,6 +131,9 @@ class MenuCategory(models.Model):
     class Meta:
         verbose_name_plural = 'Menu categories'
         ordering = ('ordering', 'id')
+        indexes = [
+            models.Index(fields=['restaurant'], name='restaurant_index')
+        ]
 
     def __str__(self):
         return self.title
@@ -126,7 +150,7 @@ class MenuCategory(models.Model):
 
 
 class MenuItemFeatureCategory(models.Model):
-    title = models.CharField(max_length=63)
+    title = models.CharField(max_length=255)
 
     class Meta:
         verbose_name_plural = 'Menu-item feature categories'
@@ -137,7 +161,7 @@ class MenuItemFeatureCategory(models.Model):
 
 
 class MenuItemFeature(models.Model):
-    title = models.CharField(max_length=63)
+    title = models.CharField(max_length=255)
     category = models.ForeignKey(
         MenuItemFeatureCategory,
         on_delete=models.CASCADE,
@@ -147,7 +171,7 @@ class MenuItemFeature(models.Model):
         ordering = ('id',)
 
     def __str__(self):
-        return self.title
+        return f'{self.category} - {self.title}'
 
 
 class MenuItem(models.Model):
@@ -156,19 +180,23 @@ class MenuItem(models.Model):
     description = models.TextField(max_length=255, blank=True, null=True)
     price = models.DecimalField(max_digits=6, decimal_places=2)
     img = models.ImageField(
-        upload_to='food-items-images/', blank=True, null=True)
+        upload_to='food-items-images/',
+        blank=True,
+        null=True
+    )
 
+    # group_code = models.CharField(max_length=10, blank=True, null=True)
     menu_category = models.ForeignKey(
         MenuCategory,
         on_delete=models.CASCADE,
-        related_name='items',
+        related_name='items'
     )
     features = models.ManyToManyField(MenuItemFeature)
 
     rating = models.FloatField(editable=False, default=0.0)
-    num_of_reviewers = models.IntegerField(editable=False, default=0)
+    num_of_reviews = models.PositiveIntegerField(editable=False, default=0)
 
-    available_now = models.BooleanField(default=True)
+    active = models.BooleanField(default=False)
     creation_time = models.DateTimeField(auto_now_add=True, editable=False)
 
     ordering = models.SmallIntegerField(default=0)
@@ -177,10 +205,6 @@ class MenuItem(models.Model):
 
     class Meta:
         ordering = ('ordering', 'id')
-
-    @property
-    def img_url(self):
-        return self.img.url if self.img else ''
 
     def save(self, *args, **kwargs):
         if not self.slug:
