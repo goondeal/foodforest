@@ -51,6 +51,14 @@ class MenuCategorySerializer(serializers.ModelSerializer):
         model = MenuCategory
         fields = ('id', 'title', 'items')
 
+    # def to_representation(self, instance):
+    #     result = super().to_representation(instance)
+    #     is_detailed = self.context.get('detailed')
+    #     if is_detailed:
+    #         result['items'] = MenuItemSerializer(
+    #             instance.items, many=True).data
+    #     return result
+
 
 class RestaurantSerializer(serializers.ModelSerializer):
     status = RestaurantStatusSerializer()
@@ -60,12 +68,10 @@ class RestaurantSerializer(serializers.ModelSerializer):
         fields = ('slug', 'name', 'slogan', 'rating',
                   'num_of_reviewers', 'logo', 'address', 'status')
 
-    # def to_representation(self, instance):
-    #     result = super().to_representation(instance)
-    #     view = self.context.get('view')
-    #     if view and view.action == 'retrieve':
-    #         result['menu'] = MenuCategorySerializer(
-    #             instance.menu, many=True).data
-    #     return result
-
-
+    def to_representation(self, instance):
+        result = super().to_representation(instance)
+        view = self.context.get('view')
+        if view and view.action == 'retrieve':
+            result['menu'] = MenuCategorySerializer(
+                instance.menu, many=True).data
+        return result
