@@ -25,11 +25,11 @@ class State(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     class Meta:
         ordering = ('ordering', 'name',)
-        indexes = [
-            models.Index(fields=['country'], name='country_index')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['country', 'name'], name='no_repeated_states_for_a_country')
         ]
 
     def __str__(self):
@@ -44,12 +44,12 @@ class City(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     class Meta:
         verbose_name_plural = 'Cities'
         ordering = ('ordering', 'name',)
-        indexes = [
-            models.Index(fields=['state'], name='state_index')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['state', 'name'], name='no_repeated_cities_for_a_state')
         ]
 
     def __str__(self):
