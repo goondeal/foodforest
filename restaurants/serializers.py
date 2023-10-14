@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import RestaurantStatus, Restaurant, MenuCategory, MenuItem, MenuItemFeature, MenuItemFeatureCategory
-
+from management.models import City
 
 class RestaurantStatusSerializer(serializers.ModelSerializer):
     class Meta:
@@ -61,15 +61,24 @@ class MenuCategorySerializer(serializers.ModelSerializer):
 
 
 class RestaurantSerializer(serializers.ModelSerializer):
-    status = RestaurantStatusSerializer()
-
+    status = serializers.PrimaryKeyRelatedField(queryset=RestaurantStatus.objects.all())
+    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all())
+    
     class Meta:
         model = Restaurant
-        fields = ('slug', 'name', 'slogan', 'rating',
+        fields = ('slug', 'name', 'slogan', 'rating', 'city',
                   'num_of_reviewers', 'logo', 'address', 'status')
+        read_only_fields = ('slug', 'rating', 'num_of_reviewers')
 
+    # def validate_city(self, value):
+    #     city = City.objects.filter()
+    #     if 'django' not in value.lower():
+    #         raise serializers.ValidationError("Blog post is not about Django")
+    #     return super().validate(attrs)    
+    
     def to_representation(self, instance):
         result = super().to_representation(instance)
+        # TODO: Add status and city
         view = self.context.get('view')
         if view and view.action == 'retrieve':
             result['menu'] = MenuCategorySerializer(
