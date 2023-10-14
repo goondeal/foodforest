@@ -9,11 +9,17 @@ from .managers import CustomUserManager
 class CustomUser(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)
     phone = PhoneNumberField(null=True, blank=True, unique=True)
-
+    birthday = models.DateField(null=True)
+    _GENDER_CHOICES = (
+        ('M', 'Male'),
+        ('F', 'Female'),
+        ('O', 'Other'),
+    )
+    gender = models.CharField(max_length=2, choices=_GENDER_CHOICES)
     username_validator = None
     username = None
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('first_name', 'last_name')
+    REQUIRED_FIELDS = ('first_name', 'last_name', 'gender', 'birthday')
 
     objects = CustomUserManager()
 
