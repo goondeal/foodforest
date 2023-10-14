@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
@@ -32,7 +33,7 @@ class FoodCategory(models.Model):
         blank=True,
         null=True
     )
-    creation_time = models.DateTimeField(editable=False, auto_now_add=True)
+    created_at = models.DateTimeField(editable=False, auto_now_add=True)
     ordering = models.SmallIntegerField(default=0)
 
     class Meta:
@@ -53,9 +54,12 @@ class FoodCategory(models.Model):
 
 
 class Restaurant(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL,
-                              on_delete=models.PROTECT)
-    city = models.ForeignKey(City, on_delete=models.PROTECT)                          
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='owned_restaurants',
+    )
+    city = models.ForeignKey(City, on_delete=models.PROTECT)
     name = models.CharField(max_length=255)
     slogan = models.CharField(max_length=127, blank=True, null=True)
     description = models.TextField(max_length=1023, blank=True, null=True)
@@ -85,6 +89,9 @@ class Restaurant(models.Model):
     status = models.ForeignKey(
         RestaurantStatus, on_delete=models.PROTECT, null=True)
 
+    blocked_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, through='RestaurantBlackList')
+
     active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
@@ -109,13 +116,43 @@ class Restaurant(models.Model):
     def menu(self):
         return self.menu_categories.all()
 
+    @property
+    def menu_items_ids(self):
+        result = []
+        for c in self.menu_categories.prefetch_related('items'):
+            result += [item.id for item in c.items.all()]
+        return result
+
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name, allow_unicode=True)
+            slug = slugify(self.name, allow_unicode=True)
+            if Restaurant.objects.filter(slug=slug).exists():
+                slug = slugify(f'{self.name} {self.city.name}', allow_unicode=True)
+                while Restaurant.objects.filter(slug=slug).exists():
+                    random_num = str(datetime.now().timestamp()).split('.')[-1][-3:]
+                    slug = slugify(f'{self.name} {self.city.name} {random_num}', allow_unicode=True)
+            self.slug = slug
         super(Restaurant, self).save(*args, **kwargs)
+        
 
     def __str__(self):
         return self.name
+
+
+class RestaurantBlackList(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'restaurant'], name='no_repeated_users_for_restaurant')
+        ]
 
 
 class MenuCategory(models.Model):
@@ -126,7 +163,8 @@ class MenuCategory(models.Model):
         related_name='menu_categories',
     )
     ordering = models.SmallIntegerField(default=0)
-    creation_time = models.DateTimeField(auto_now_add=True, editable=False)
+    active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     class Meta:
         verbose_name_plural = 'Menu categories'
@@ -178,14 +216,13 @@ class MenuItem(models.Model):
     name = models.CharField(max_length=127)
     slug = models.SlugField(allow_unicode=True, editable=False)
     description = models.TextField(max_length=255, blank=True, null=True)
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(max_digits=9, decimal_places=2)
     img = models.ImageField(
         upload_to='food-items-images/',
         blank=True,
         null=True
     )
-
-    # group_code = models.CharField(max_length=10, blank=True, null=True)
+    active = models.BooleanField(default=False)
     menu_category = models.ForeignKey(
         MenuCategory,
         on_delete=models.CASCADE,
@@ -196,8 +233,7 @@ class MenuItem(models.Model):
     rating = models.FloatField(editable=False, default=0.0)
     num_of_reviews = models.PositiveIntegerField(editable=False, default=0)
 
-    active = models.BooleanField(default=False)
-    creation_time = models.DateTimeField(auto_now_add=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
 
     ordering = models.SmallIntegerField(default=0)
     avg_prep_duration_sec = models.SmallIntegerField(default=0, editable=False)
