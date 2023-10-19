@@ -6,7 +6,7 @@ class OrderStatusTranslationOptions(TranslationOptions):
     fields = ('title',)
 
 class OrderTypeTranslationOptions(TranslationOptions):
-    fields = ('title',)
+    fields = ('title', 'description')
 
 
 translator.register(OrderStatus, OrderStatusTranslationOptions)
