@@ -90,7 +90,7 @@ class Restaurant(models.Model):
         RestaurantStatus, on_delete=models.PROTECT, null=True)
 
     blocked_users = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, through='RestaurantBlackList')
+        settings.AUTH_USER_MODEL, through='RestaurantBlackList', related_name='blocks')
 
     active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)

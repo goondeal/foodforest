@@ -66,7 +66,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Restaurant
-        fields = ('slug', 'name', 'slogan', 'rating', 'city',
+        fields = ('slug', 'name', 'active', 'slogan', 'rating', 'city',
                   'num_of_reviewers', 'logo', 'address', 'status')
         read_only_fields = ('slug', 'rating', 'num_of_reviewers')
 
@@ -78,6 +78,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         result = super().to_representation(instance)
+        result['status'] = RestaurantStatusSerializer(instance.status).data
         # TODO: Add status and city
         view = self.context.get('view')
         if view and view.action == 'retrieve':
