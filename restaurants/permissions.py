@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+from .models import Restaurant
 from rest_framework import permissions
 
 
@@ -29,3 +31,9 @@ class RestaurantPermission(permissions.BasePermission):
             return True
 
         return False
+
+
+class RestaurantMenuPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        restaurant = get_object_or_404(Restaurant, slug=view.kwargs.get('restaurant_slug', ''))
+        return request.user == restaurant.owner

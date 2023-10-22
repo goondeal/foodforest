@@ -114,7 +114,7 @@ class Restaurant(models.Model):
 
     @property
     def menu(self):
-        return self.menu_categories.all()
+        return self.menu_categories.filter(active=True)
 
     @property
     def menu_items_ids(self):
@@ -145,6 +145,7 @@ class RestaurantBlackList(models.Model):
         on_delete=models.CASCADE,
     )
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    note = models.TextField(max_length=511, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -169,8 +170,8 @@ class MenuCategory(models.Model):
     class Meta:
         verbose_name_plural = 'Menu categories'
         ordering = ('ordering', 'id')
-        indexes = [
-            models.Index(fields=['restaurant'], name='restaurant_index')
+        constraints = [
+            models.UniqueConstraint(fields=['restaurant', 'title'], name='no_repeated_categories_in_restaurant_menu')
         ]
 
     def __str__(self):

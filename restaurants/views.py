@@ -1,11 +1,14 @@
 from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin
+from rest_framework.mixins import CreateModelMixin, RetrieveModelMixin, ListModelMixin, UpdateModelMixin
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from .models import Restaurant, MenuItem, MenuCategory
 from .serializers import *
 from management.models import City
+from .permissions import RestaurantMenuPermission
 
 
 # User API
@@ -66,35 +69,90 @@ class RestaurantViewSet(CreateModelMixin, RetrieveModelMixin, ListModelMixin, Ge
         return queryset
 
     def create(self, request, *args, **kwargs):
-        print('request data =', request.data)
+        # print('request data =', request.data)
         if request.user.is_authenticated:
             return super().create(request, *args, **kwargs)
         else:
             return Response({'message': 'Please, login first'}, status=status.HTTP_401_UNAUTHORIZED)
 
     def perform_create(self, serializer):
-        print('creating restaurant with data =', serializer.validated_data)
+        # print('creating restaurant with data =', serializer.validated_data)
         return serializer.save(owner=self.request.user)
 
 
-class RestaurantMenu(ListModelMixin, GenericViewSet):
-    model = MenuItem
-    serializer_class = MenuItemSerializer
+
+# class MenuCategoryViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
+#     '''
+#     The case for now is to response with the category and all its items with it.
+#     '''
+#     model = MenuCategory
+#     serializer_class = MenuCategorySerializer
+
+#     def get_queryset(self):
+#         restaurant = get_object_or_404(
+#             Restaurant, slug=self.kwargs.get('slug'))
+#         return restaurant.menu_categories.filter(active=True)
+
+
+class RestaurantAdminViewSet(ListModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
+    model = Restaurant
+    lookup_field = 'slug'
+    lookup_url_kwarg = 'slug'
+    serializer_class = RestaurantSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = user.owned_restaurants.all()
+        # print('reataurant admin get_queryset=', queryset)
+        # TODO: Include restaurant stuff after implementing this feature
+        return queryset
+
+    # def perform_create(self, serializer):
+    #     return serializer.save(owner=self.request.user)
+    def partial_update(self, request, *args, **kwargs):
+        print('partial update request data =', request.data)
+        return super().partial_update(request, *args, **kwargs)
+
+
+class MenuCategoryAdminViewSet(ModelViewSet):
+    model = MenuCategory
+    serializer_class = MenuCategoryAdminSerializer
+    permission_classes = [IsAuthenticated, RestaurantMenuPermission]
 
     def get_queryset(self):
         restaurant = get_object_or_404(
             Restaurant, slug=self.kwargs.get('restaurant_slug'))
-        menu_categories = MenuCategory.objects.filter(restaurant=restaurant)
-        return MenuItem.objects.filter(menu_category__in=menu_categories)
+        return restaurant.menu_categories.all()
 
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    def perform_create(self, serializer):
+        restaurant = get_object_or_404(
+            Restaurant, slug=self.kwargs.get('restaurant_slug'))
+        return serializer.save(restaurant=restaurant)
+    
 
 
-class MenuCategoryViewSet(ModelViewSet):
-    model = MenuCategory
-    serializer_class = MenuCategorySerializer
+class MenuItemsAdminPagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+class MenuItemsAdminViewSet(ModelViewSet):
+    model = MenuItem
+    serializer_class = MenuItemAdminSerializer
+    permission_classes = [IsAuthenticated, RestaurantMenuPermission]
+    pagination_class = MenuItemsAdminPagination
+    
 
     def get_queryset(self):
-        restaurant = get_object_or_404(Restaurant, slug=self.kwargs.get('slug'))
-        return restaurant.menu_categories.all()
+        restaurant = get_object_or_404(
+            Restaurant, slug=self.kwargs.get('restaurant_slug'))
+        # print('restaurant=', restaurant)
+        menu_category = get_object_or_404(
+            restaurant.menu_categories, pk=self.kwargs.get('menu_category_pk'))
+        # print('menu_category=', menu_category)    
+        return menu_category.items.all()
+
+    def perform_create(self, serializer):
+        mc = get_object_or_404(
+            MenuCategory, pk=self.kwargs.get('menu_category_pk'))
+        return serializer.save(menu_category=mc)
